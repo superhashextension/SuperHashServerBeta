@@ -10,17 +10,30 @@ export const getBulkUserStats = async (req, res) => {
     }
 
     try {
-        const users = await twitchService.fetchTwitchUsers(usernames, req.twitchHeaders);
 
-        const results = await Promise.all(usernames.map(async (username) => {
-            const user = users.find((user) => user.login === username);
-            const followers = await twitchService.fetchFollowerCount(user.id, req.twitchHeaders);
-            return [username, { followers, ago: formatRelativeTime(user.created_at) }]
-        }))
+        const users = await twitchService.fetchTwitchUsers(usernames, req.twitchHeaders) || [];
 
-        const response = Object.fromEntries(results);
-        res.json({ users: response });
+        const userEntries = await Promise.all(users.map(async (user) => {
+            try {
+                const followers = await twitchService.fetchFollowerCount(user.id, req.twitchHeaders);
+
+                return [
+                    user.login,
+                    {
+                        followers,
+                        ago: formatRelativeTime(user.created_at)
+                    }
+                ];
+            } catch (err) {
+                // Handle individual fetch errors so the whole request doesn't fail
+                console.error(`Failed to fetch followers for ${user.login}:`, err.message);
+                return [user.login, { followers: null , ago: formatRelativeTime(user.created_at)}];
+            }
+        }));
+
+        res.json({ users: Object.fromEntries(userEntries) });
     } catch (error) {
+        console.error(error.message || error)
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
