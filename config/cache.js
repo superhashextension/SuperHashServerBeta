@@ -1,6 +1,6 @@
 import { LRUCache } from "lru-cache/raw";
 
-const MAX_CHACHE_SIZE = 1000;
+const MAX_CHACHE_SIZE = 2000;
 
 export const userCache = new LRUCache({
     // 1. The Capacity

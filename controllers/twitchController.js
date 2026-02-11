@@ -10,24 +10,31 @@ export const getBulkUserStats = async (req, res) => {
     }
 
     try {
+        // 1. Filter missing users
+        const unfetched = usernames.filter(u => !userCache.has(u));
 
-        const users = await twitchService.fetchTwitchUsers(usernames, req.twitchHeaders) || [];
+        // 2. Fetch and cache only if needed
+        if (unfetched.length > 0) {
+            const fetchedUsers = await twitchService.fetchTwitchUsers(unfetched, req.twitchHeaders);
+            fetchedUsers.forEach(user => userCache.set(user.login, user));
+        }
 
-        const userEntries = await Promise.all(users.map(async (user) => {
+        // 3. Process the original username list (ensures no duplicates & preserves order)
+        const userEntries = await Promise.all(usernames.map(async (username) => {
+            const user = userCache.get(username);
+
+            // Safety check if user doesn't exist in cache or Twitch API
+            if (!user) return [username, null];
+
             try {
                 const followers = await twitchService.fetchFollowerCount(user.id, req.twitchHeaders);
-
                 return [
-                    user.login,
-                    {
-                        followers,
-                        ago: formatRelativeTime(user.created_at)
-                    }
+                    username,
+                    { followers, ago: formatRelativeTime(user.created_at) }
                 ];
             } catch (err) {
-                // Handle individual fetch errors so the whole request doesn't fail
-                console.error(`Failed to fetch followers for ${user.login}:`, err.message);
-                return [user.login, { followers: null , ago: formatRelativeTime(user.created_at)}];
+                console.error(`Failed to fetch followers for ${username}:`, err.message);
+                return [username, { followers: null, ago: formatRelativeTime(user.created_at) }];
             }
         }));
 
