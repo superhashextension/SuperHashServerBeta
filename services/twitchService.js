@@ -1,5 +1,5 @@
 import axios from "axios";
-import { userCache ,userFollowersCache } from "../config/cache.js";
+import { userCache, userFollowersCache } from "../config/cache.js";
 
 
 export const fetchTwitchUser = async (username, config) => {
@@ -13,6 +13,25 @@ export const fetchTwitchUser = async (username, config) => {
     if (userData) {
         userCache.set(username, userData);
     }
+
+    return userData;
+};
+
+
+export const fetchTwitchUsers = async (usernames, config) => {
+
+    // const cachedUser = userCache.get(username);
+    // if (cachedUser) return cachedUser;
+
+    const params = new URLSearchParams(usernames.map(username => ['login', username]));
+
+    const { data } = await axios.get(`https://api.twitch.tv/helix/users?${params.toString()}`, config);
+    const userData = data.data;
+    // console.log(userData);
+
+    // if (userData) {
+    //     userCache.set(username, userData);
+    // }
 
     return userData;
 };
