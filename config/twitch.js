@@ -1,12 +1,18 @@
 import axios from "axios";
 
-const state = {
+export const state = {
     accessToken: null,
     tokenExpiry: null,
 };
 
 export const ensureAccessToken = async (req, res, next) => {
-    const { TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET } = process.env;
+    const { TWITCH_CLIENT_ID, PUBLIC_CLIENT_ID, TWITCH_CLIENT_SECRET } = process.env;
+    
+    const authToken = req.headers["x-twitch-auth-token"];
+    if (!authToken) {
+        return res.status(401).json({ error: "Missing Twitch auth token" });
+    }
+
     if (!state.accessToken || Date.now() >= state.tokenExpiry) {
         try {
             const params = new URLSearchParams({
@@ -19,6 +25,7 @@ export const ensureAccessToken = async (req, res, next) => {
             
             state.accessToken = data.access_token;
             state.tokenExpiry = Date.now() + data.expires_in * 1000;
+            console.log("Token : ", state.accessToken);
             console.log("✅ Twitch token refreshed");
         } catch (error) {
             console.error(error.message)
@@ -31,6 +38,14 @@ export const ensureAccessToken = async (req, res, next) => {
         headers: {
             "Client-ID": TWITCH_CLIENT_ID,
             Authorization: `Bearer ${state.accessToken}`,
+        },
+    }
+    
+    req.twitchGQLHeaders = {
+        headers: {
+            "Client-ID": PUBLIC_CLIENT_ID,
+            "Authorization": `OAuth ${authToken}`,
+            "accept-encoding": "gzip, deflate, br, zstd"
         },
     };
     next();

@@ -20,7 +20,7 @@ export const userCache = new LRUCache({
 
 export const userFollowersCache = new LRUCache({
     max: MAX_CHACHE_SIZE,
-    ttl: 1000 * 60 * 5, // 5 minutes
+    ttl: 1000 * 60, // 2 minutes
     ttlAutopurge: true,
     updateAgeOnGet: false,
     allowStale: false,
