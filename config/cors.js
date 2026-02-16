@@ -22,6 +22,12 @@ export const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'x-twitch-auth-token',  // ← Add your custom header here
+    'X-Twitch-Auth-Token'   // ← Also add capitalized version for safety
+  ],
   optionsSuccessStatus: 200
 };
