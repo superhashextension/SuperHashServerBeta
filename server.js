@@ -4,14 +4,11 @@ import express from "express";
 import cors from "cors";
 import { ensureAccessToken } from "./config/twitch.js";
 import { getUserStats } from "./controllers/twitchController.js";
+import { corsOptions } from "./config/cors.js";
 
 const app = express();
 
 app.use(express.json());
-
-const corsOptions = {
-  origin: process.env.CLIENT_URL,
-}
 app.use(cors(corsOptions));
 
 app.get("/health", (req, res) => res.sendStatus(200));
