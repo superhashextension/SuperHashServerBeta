@@ -1,4 +1,4 @@
-import { userCache, userFollowersCache } from "../config/cache.js";
+import { userCache, userFollowersCache, userServerCache } from "../config/cache.js";
 import * as twitchService from "../services/twitchService.js";
 
 // export const getUserStats = async (req, res) => {
@@ -123,8 +123,32 @@ export const getUserStats = async (req, res) => {
             // If neither cached → unfetchedUsers handles both (GQL returns followers)
         });
 
-        // ─── Try GQL first, fall back to Official API ───────
+        // ─── Try Official API first, fall back to GQL API ───────
         try {
+            // Official API doesn't return followers → fetch them separately
+            const needFollowers = [...unfetchedUsers, ...unfetchedFollowers];
+
+            const [fetchedUsers, fetchedFollowersList] = await Promise.all([
+                unfetchedUsers.length > 0
+                    ? twitchService.fetchTwitchUsers(unfetchedUsers, req.twitchHeaders)
+                    : [],
+                needFollowers.length > 0
+                    ? twitchService.fetchFollowerCount(needFollowers, req.twitchHeaders)
+                    : [],
+            ]);
+
+            fetchedUsers.forEach((user) => {
+                usersData.set(user.login, user);
+                userCache.set(user.login, user);
+            });
+
+            fetchedFollowersList.forEach(({ login, followers }) => {
+                followersData.set(login, followers);
+                userFollowersCache.set(login, followers);
+            });
+        } catch (error) {
+            console.warn("[getUserStats]: Official API failed, falling back to GQL API:", error.message || error);
+
             const [fetchedUsers, fetchedFollowersList] = await Promise.all([
                 unfetchedUsers.length > 0
                     ? twitchService.fetchTwitchUsersGQL(unfetchedUsers, req.twitchGQLHeaders)
@@ -148,42 +172,43 @@ export const getUserStats = async (req, res) => {
                 userFollowersCache.set(login, followers);
             });
 
-        } catch (gqlError) {
-            console.warn("GQL failed, falling back to Official API:", gqlError.message);
-
-            // Official API doesn't return followers → fetch them separately
-            const needFollowers = [...unfetchedUsers, ...unfetchedFollowers];
-
-            const [fetchedUsers, fetchedFollowersList] = await Promise.all([
-                unfetchedUsers.length > 0
-                    ? twitchService.fetchTwitchUsers(unfetchedUsers, req.twitchHeaders)
-                    : [],
-                needFollowers.length > 0
-                    ? twitchService.fetchFollowerCount(needFollowers, req.twitchHeaders)
-                    : [],
-            ]);
-
-            fetchedUsers.forEach((user) => {
-                usersData.set(user.login, user);
-                userCache.set(user.login, user);
-            });
-
-            fetchedFollowersList.forEach(({ login, followers }) => {
-                followersData.set(login, followers);
-                userFollowersCache.set(login, followers);
-            });
         }
 
         // ─── Merge and respond ──────────────────────────────
         const userEntries = broadcasters.map(({ login }) => {
             const user = usersData.get(login);
-            const followers = followersData.get(login); 
+            const followers = followersData.get(login);
             return { ...user, followers };
         });
 
         res.json({ users: userEntries });
     } catch (error) {
-        console.error(error.message || error);
+        console.error('[getUserData] : ', error.message || error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+export const getUserServerStats = async (req, res) => {
+    const { broadcasters } = req.body;
+
+    if (!Array.isArray(broadcasters)) {
+        return res.status(400).json({ error: "Broadcasters must be an array" });
+    }
+
+    if (broadcasters.length > 10) {
+        return res.status(400).json({ error: "Too many broadcasters" });
+    }
+
+    try {
+        const results = await twitchService.fetchBroadcasterServer(broadcasters, req.twitchGQLHeaders, userServerCache);
+        const userServerData = results.map(({ id, login, broadcaster, error }) => {
+            if (error) return { id, login, error };
+            const { region, regionCode } = broadcaster;
+            return ({ id, login, region, regionCode })
+        });
+        res.json({ users: userServerData });
+    } catch (error) {
+        console.error('[getUserServerStats] : ', error.message || error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}

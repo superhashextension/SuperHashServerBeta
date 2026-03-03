@@ -26,8 +26,8 @@ export const corsOptions = {
     'Content-Type',
     'Authorization',
     'X-Requested-With',
-    'x-twitch-auth-token',  // ← Add your custom header here
-    'X-Twitch-Auth-Token'   // ← Also add capitalized version for safety
+    'x-app-token',  
+    'x-twitch-cookie',
   ],
   optionsSuccessStatus: 200
 };

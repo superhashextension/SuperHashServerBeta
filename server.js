@@ -2,23 +2,40 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { ensureAccessToken } from "./config/twitch.js";
-import { getUserStats } from "./controllers/twitchController.js";
+import helmet from 'helmet';
+import mongoSanitize from "express-mongo-sanitize";
+import { connectDB } from "./config/db.js";
+import { ensureUserAuth } from "./config/twitch.js";
+import { getUserServerStats, getUserStats } from "./controllers/twitchController.js";
 import { corsOptions } from "./config/cors.js";
+import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
 
 const app = express();
 
+// Connect to MongoDB
+await connectDB();
+
+// Middleware
+app.use(helmet());
 app.use(express.json());
 app.use(cors(corsOptions));
+app.use(mongoSanitize());
 
-app.get("/health", (req, res) => res.sendStatus(200));
-app.post("/user", ensureAccessToken, getUserStats);
+// Routes
+app.get("/health", (req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
-// EXPORT instead of app.listen()
+// Auth & Admin routes
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+
+// Protected routes - require user authentication
+app.post("/api/user", ensureUserAuth, getUserStats);
+app.post("/api/user-server", ensureUserAuth, getUserServerStats);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
+
 export default app;
-
-// Start the server
-// const PORT = process.env.PORT
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });
