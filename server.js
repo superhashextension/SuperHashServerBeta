@@ -33,9 +33,9 @@ app.use("/api/admin", adminRoutes);
 app.post("/api/user", ensureUserAuth, getUserStats);
 app.post("/api/user-server", ensureUserAuth, getUserServerStats);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//     console.log(`🚀 Server running on port ${PORT}`);
+// });
 
 export default app;
