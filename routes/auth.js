@@ -316,6 +316,7 @@ router.post('/check-user', async (req, res) => {
 
         if (user.status === 'banned') {
             return res.status(403).json({
+                user,
                 error: 'Account banned',
                 code: 'BANNED'
             });
@@ -323,6 +324,7 @@ router.post('/check-user', async (req, res) => {
 
         if (user.status === 'pending') {
             return res.status(403).json({
+                user,
                 error: 'Account pending approval',
                 code: 'PENDING_APPROVAL'
             });
@@ -330,7 +332,9 @@ router.post('/check-user', async (req, res) => {
 
         // User is active — they can login again
         return res.json({
+            success: true,
             status: 'active',
+            user,
             message: 'Account is active'
         });
 
@@ -339,5 +343,47 @@ router.post('/check-user', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+router.get('/me', async (req, res) => {
+    const appToken = req.headers["x-app-token"];
+    if (!appToken) {
+        return res.status(401).json({
+            error: "Missing app token - please login",
+            code: "NO_APP_TOKEN"
+        });
+    }
+    const user = await User.findOne({ twitchAccessToken: appToken })
+
+    if (!user) {
+        return res.status(401).json({
+            error: "Invalid app token - please login",
+            code: "INVALID_APP_TOKEN"
+        });
+    }
+
+    if (user.status === 'banned') {
+            return res.status(403).json({
+                user: user.toSafeObject(),
+                error: 'Account banned',
+                code: 'BANNED'
+            });
+        }
+
+        if (user.status === 'pending') {
+            return res.status(403).json({
+                user: user.toSafeObject(),
+                error: 'Account pending approval',
+                code: 'PENDING_APPROVAL'
+            });
+        }
+
+        // User is active — they can login again
+        return res.json({
+            success: true,
+            status: 'active',
+            user: user.toSafeObject(),
+            message: 'Account is active'
+        });
+})
 
 export default router;
