@@ -114,7 +114,7 @@ router.post('/callback', async (req, res) => {
                 lastLoginAt: new Date()
             });
 
-            console.log(`📝 New user registered: ${user.twitchLogin} (${user.email})`);
+            log.info(`📝 New user registered: ${user.twitchLogin} (${user.email})`);
         } else {
             // Existing user - update tokens
             user.twitchAccessToken = tokens.accessToken;
@@ -127,7 +127,7 @@ router.post('/callback', async (req, res) => {
             user.lastLoginAt = new Date();
             await user.save();
 
-            console.log(`🔄 User updated: ${user.twitchLogin}`);
+            log.info(`🔄 User updated: ${user.twitchLogin}`);
         }
 
         // Check access
@@ -154,7 +154,7 @@ router.post('/callback', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('[auth/callback]:', error.message);
+        log.error('[auth/callback]:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -221,7 +221,7 @@ router.get('/verify', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('[auth/verify]:', error.message);
+        log.error('[auth/verify]:', error.message);
         res.status(500).json({ error: 'Verification failed' });
     }
 });
@@ -260,7 +260,7 @@ router.post('/refresh', async (req, res) => {
             user.tokenExpiresAt = refreshed.expiresAt;
             await user.save();
 
-            console.log(`🔄 Token refreshed: ${user.twitchLogin}`);
+            log.info(`🔄 Token refreshed: ${user.twitchLogin}`);
         }
 
         res.json({
@@ -269,7 +269,7 @@ router.post('/refresh', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('[auth/refresh]:', error.message);
+        log.error('[auth/refresh]:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -286,7 +286,7 @@ router.post('/logout', async (req, res) => {
             const user = await User.findOne({ twitchAccessToken: appToken });
             if (user) {
                 await revokeTwitchToken(user.twitchAccessToken);
-                console.log(`👋 User logged out: ${user.twitchLogin}`);
+                log.info(`👋 User logged out: ${user.twitchLogin}`);
             }
         } catch {
             // Ignore errors on logout
@@ -339,7 +339,7 @@ router.post('/check-user', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Check user error:', error);
+        log.error('Check user error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });

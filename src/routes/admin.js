@@ -85,7 +85,7 @@ router.patch('/users/:id', async (req, res) => {
         return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log(`👤 Admin updated user ${user.twitchLogin}:`, update);
+    log.info(`👤 Admin updated user ${user.twitchLogin}:`, update);
 
     res.json({ user });
 });
@@ -100,7 +100,7 @@ router.delete('/users/:id', async (req, res) => {
         return res.status(404).json({ error: 'User not found' });
     }
 
-    console.log(`🗑️ Admin deleted user: ${user.login}`);
+    log.info(`🗑️ Admin deleted user: ${user.login}`);
 
     res.json({ success: true });
 });
@@ -126,7 +126,7 @@ router.post('/users/bulk', async (req, res) => {
         update
     );
 
-    console.log(`👤 Admin bulk ${action}: ${result.modifiedCount} users`);
+    log.info(`👤 Admin bulk ${action}: ${result.modifiedCount} users`);
 
     res.json({ success: true, modified: result.modifiedCount });
 });
@@ -164,7 +164,7 @@ router.patch('/settings', async (req, res) => {
 
     await Promise.all(updates);
 
-    console.log('⚙️ Admin updated settings');
+    log.info('⚙️ Admin updated settings');
 
     res.json({ success: true });
 });

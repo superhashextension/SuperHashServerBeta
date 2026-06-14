@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-const sessionSchema = new mongoose.Schema(
+const deviceSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -9,18 +9,18 @@ const sessionSchema = new mongoose.Schema(
 
     deviceId: String,
 
-    refreshTokenHash: String,
+    browser: String,
 
-    ip: String,
+    os: String,
 
-    userAgent: String,
+    firstIp: String,
+
+    lastIp: String,
 
     revoked: {
       type: Boolean,
       default: false
     },
-
-    expiresAt: Date,
 
     lastSeen: Date
   },
@@ -29,7 +29,7 @@ const sessionSchema = new mongoose.Schema(
   }
 )
 
-export const Session = mongoose.model(
-  "Session",
-  sessionSchema
+export default mongoose.model(
+  "Device",
+  deviceSchema
 )

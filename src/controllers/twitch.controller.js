@@ -1,5 +1,5 @@
 import { userCache, userFollowersCache, userServerCache } from "../config/cache.js";
-import * as twitchService from "../services/twitchService.js";
+import * as twitchService from "../services/twitch.service.js";
 
 // export const getUserStats = async (req, res) => {
 //     const { broadcasters } = req.body;
@@ -80,7 +80,7 @@ import * as twitchService from "../services/twitchService.js";
 
 //         res.json({ users: userEntries });
 //     } catch (error) {
-//         console.error(error.message || error)
+//         log.error(error.message || error)
 //         res.status(500).json({ error: "Internal Server Error" });
 //     }
 // };
@@ -183,7 +183,7 @@ export const getUserStats = async (req, res) => {
 
         res.json({ users: userEntries });
     } catch (error) {
-        console.error('[getUserData] : ', error.message || error);
+        log.error('[getUserData] : ', error.message || error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
@@ -208,7 +208,7 @@ export const getUserServerStats = async (req, res) => {
         });
         res.json({ users: userServerData });
     } catch (error) {
-        console.error('[getUserServerStats] : ', error.message || error);
+        log.error('[getUserServerStats] : ', error.message || error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }

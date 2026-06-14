@@ -1,5 +1,7 @@
 export const corsOptions = {
   origin: function (origin, callback) {
+    
+
     const allowedOrigins = [
       `chrome-extension://${process.env.EXTENSION_ID}`
     ];

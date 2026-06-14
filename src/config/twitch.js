@@ -168,7 +168,7 @@ export const ensureUserAuth = async (req, res, next) => {
 
                 // Notify client about new token
                 res.setHeader('X-New-App-Token', refreshed.accessToken);
-                console.log(`✅ Token refreshed for: ${user.twitchLogin}`);
+                log.info(`✅ Token refreshed for: ${user.twitchLogin}`);
             } catch {
                 return res.status(401).json({
                     error: "Token refresh failed",
@@ -200,7 +200,7 @@ export const ensureUserAuth = async (req, res, next) => {
 
         next();
     } catch (error) {
-        console.error('[ensureUserAuth]:', error.message);
+        log.error('[ensureUserAuth]:', error.message);
         return res.status(500).json({ error: "Authentication failed" });
     }
 };
